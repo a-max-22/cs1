@@ -1,4 +1,6 @@
 
+from os import listdir
+from os.path import isfile, join
 
 
 def make_2_dimesional_array(N, M):
@@ -39,7 +41,7 @@ class Perceptron:
         self.width  = M
         self.weights = make_2_dimesional_array(N,M)
         self.threshold = threshold
-    
+        self.recoginzedLetter = 'A'
     
     def evaluateActivationFunc(self, fileName):
         values = readValuesFromFile(fileName, self.height, self.width)
@@ -49,4 +51,28 @@ class Perceptron:
                 sum += self.weights[i][j] * values[i][j]
 
         return sum > self.threshold
+
+    def adjustWeights(self, sampleFilePath, lower = True):
+        adjustDeltas = readValuesFromFile(sampleFilePath, self.height, self.width)
+        for i in range(self.height):
+            for j in range(self.width):
+                if lower:
+                    self.weights[i][j] -= adjustDeltas[i][j]
+                else:
+                    self.weights[i][j] += adjustDeltas[i][j]
+
+
+    def processDataset(self, samplesDir):
+        datasetFilesList = [f for f in listdir(samplesDir) if isfile(join(samplesDir, f))]
+        for letterName in datasetFilesList:
+            samplePath = join(samplesDir, letterName)
+            isLetterRecognized = self.evaluateActivationFunc(samplePath)
+            if isLetterRecognized and letterName == self.recoginzedLetter:
+                continue
+            if not isLetterRecognized and letterName == self.recoginzedLetter:
+                self.adjustWeights(samplePath, lower = True)
+                continue
+            if isLetterRecognized and letterName != self.recoginzedLetter:
+                self.adjustWeights(samplePath, lower = False)
+                continue
 
